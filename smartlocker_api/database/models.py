@@ -15,3 +15,14 @@ class Lockerset(db.Model):
 
     def __repr__(self):
         return '<Lockerset %r>' % self.code
+
+class User(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50))
+
+    def __init__(self, email):
+        self.email = email
+
+    def __repr__(self):
+        return '<User %r>' % self.emails
+

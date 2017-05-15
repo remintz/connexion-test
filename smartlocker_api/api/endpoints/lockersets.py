@@ -6,6 +6,7 @@ from smartlocker_api.api.business import create_lockerset, delete_lockerset#, up
 #from smartlocker_api.api.serializers import lockerset
 from smartlocker_api.api.restplus import api
 from smartlocker_api.database.models import Lockerset
+from smartlocker_api.util import ValidationError
 
 log = logging.getLogger(__name__)
 
@@ -30,6 +31,7 @@ class LockersetCollection(Resource):
 
     @api.response(201, 'Lockerset successfully created.')
     @api.response(409, 'Lockerset already exists')
+    @api.response(400, 'Number of boxes out of the allowed range')
     @api.expect(lockerset)
     @api.marshal_list_with(lockerset)
     def post(self):
@@ -37,11 +39,7 @@ class LockersetCollection(Resource):
         Creates a new lockerset.
         """
         data = request.json
-        try:
-            lockerset = create_lockerset(data) 
-        except ValueError as err:
-            print('ValueError %s' % err)
-            return err, 409
+        lockerset = create_lockerset(data) 
         return lockerset, 201
 
 

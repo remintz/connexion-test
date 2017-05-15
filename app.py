@@ -3,10 +3,9 @@ import logging.config
 from flask import Flask, Blueprint
 from smartlocker_api import settings
 from smartlocker_api.api.endpoints.lockersets import ns as lockersets_namespace
-#from smartlocker_api.api.endpoints.users import ns as users_namespace
+from smartlocker_api.api.endpoints.users import ns as users_namespace
 from smartlocker_api.api.restplus import api
 from smartlocker_api.database import db, reset_database
-
 
 app = Flask(__name__)
 logging.config.fileConfig('logging.conf')
@@ -14,6 +13,7 @@ log = logging.getLogger(__name__)
 
 
 def configure_app(flask_app):
+    log.debug('configure_app')
     flask_app.config['SERVER_NAME'] = settings.FLASK_SERVER_NAME
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
     flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = settings.SQLALCHEMY_TRACK_MODIFICATIONS
@@ -25,8 +25,8 @@ def configure_app(flask_app):
 
 
 def initialize_app(flask_app):
+    log.debug('initialize_app')
     configure_app(flask_app)
-
     blueprint = Blueprint('api', __name__, url_prefix='/api')
     api.init_app(blueprint)
     api.add_namespace(lockersets_namespace)
@@ -43,3 +43,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+

@@ -1,5 +1,6 @@
 from smartlocker_api.database import db
-from smartlocker_api.database.models import Lockerset
+from smartlocker_api.database.models import Lockerset, User
+from smartlocker_api.util import ValidationError
 
 def create_lockerset(data):
     code = data.get('code')
@@ -8,7 +9,9 @@ def create_lockerset(data):
     print('create_lockerset')
     print(lockerset)
     if lockerset is not None:
-        raise ValueError('Cannot create lockersets with the same code')
+        raise ValidationError('Cannot create lockersets with the same code', status_code=409)
+    if numBoxes < 1:
+        raise ValidationError('Number of boxes should be greater than 0', status_code=400)
     lockerset = Lockerset(code, numBoxes)
     db.session.add(lockerset)
     db.session.commit()
