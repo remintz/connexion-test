@@ -1,9 +1,12 @@
 aniso8601==1.2.1
 appdirs==1.4.3
 click==6.7
+clickclick==1.2.1
+connexion==1.1.9
 Flask==0.12.1
 flask-restplus==0.10.1
 Flask-SQLAlchemy==2.2
+inflection==0.3.1
 itsdangerous==0.24
 Jinja2==2.9.6
 jsonschema==2.6.0
@@ -12,6 +15,9 @@ packaging==16.8
 pyparsing==2.2.0
 python-dateutil==2.6.0
 pytz==2017.2
+PyYAML==3.12
+requests==2.14.2
 six==1.10.0
 SQLAlchemy==1.1.9
+swagger-spec-validator==2.1.0
 Werkzeug==0.12.1
