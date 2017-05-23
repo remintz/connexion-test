@@ -67,3 +67,4 @@ ENV/
 .idea/
 *.sqlite
 /.vscode
+/swagger/target
