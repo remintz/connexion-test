@@ -1,38 +1,51 @@
 import datetime
 import logging
 from connexion import NoContent
+import connexion
+from database import db
+from database.models import Lockerset
+import uuid
 
 log = logging.getLogger(__name__)
-lockersets = {}
 
-def post(lockerset):
-    log.debug('POST')
-    count = len(lockersets)
-    lockerset['id'] = count + 1
-    lockerset['created'] = datetime.datetime.now()
-    lockersets[lockerset['id']] = lockerset
-    return lockerset, 201
+def create():
+    token = connexion.request.headers['token']
+    #--- TODO: check token
+    code = connexion.request.headers['code'].upper()
+    numBoxes = int(connexion.request.headers['numBoxes'])
+    log.debug("POST code: %s, numBoxes: %s" % (code, numBoxes))
+    lockerset = Lockerset.query.filter(Lockerset.code == code).first()
+    if lockerset is not None:
+        log.debug('lockerset already exists')
+        return NoContent, 409
+    if numBoxes < 1:
+        log.debug('numboxes out of range')
+        return NoContent, 400
+    lockerset = Lockerset(code, numBoxes)
+    db.session.add(lockerset)
+    db.session.commit()
+    log.debug('lockerset created')
+    return lockerset.serialize(), 201
 
-def search():
-    return list(lockersets.values())
+def list():
+    token = connexion.request.headers['token']
+    #--- TODO: check token
+    lockersets = Lockerset.query.all()
+    return Lockerset.serialize_list(lockersets)
 
-def delete(id):
-    id = int(id)
-    if lockersets.get(id) is None:
-        return NoContent, 404
-    del lockersets[id]
+def delete(lockerset_code):
+    token = connexion.request.headers['token']
+    #--- TODO: check token
+    lockerset = Lockerset.query.filter(Lockerset.code == lockerset_code).first()
+    if lockerset is not None:
+        db.session.delete(lockerset)
+        db.session.commit()
     return NoContent, 204
 
-def get(id):
-    id = int(id)
-    if lockersets.get(id) is None:
-        return NoContent, 404
-    return lockersets[id]
-
-def put(id, lockerset):
-    id = int(id)
-    if lockersets.get(id) is None:
-        return NoContent, 404
-    lockersets[id] = lockerset
-    return lockersets[id]
-    
+def get(lockerset_code):
+    token = connexion.request.headers['token']
+    #--- TODO: check token
+    lockerset = Lockerset.query.filter(Lockerset.code == lockerset_code).first()
+    if lockerset is None:
+        return NoContent, 204
+    return lockerset.serialize(), 201

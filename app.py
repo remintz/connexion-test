@@ -1,21 +1,18 @@
-import logging.config
+#!/usr/bin/env python3
 import connexion
-from connexion.resolver import RestyResolver
-from flask import Flask, Blueprint
+import datetime
+import logging
 import settings
-from smartlocker_api.api.endpoints.lockersets import ns as lockersets_namespace
-#from smartlocker_api.api.endpoints.users import ns as users_namespace
-from smartlocker_api.api.restplus import api
-from smartlocker_api.database import db, reset_database
+import os
 
+from connexion import NoContent
+from database import db, reset_database
 
-app = connexion.App(__name__, specification_dir='swagger/')
-logging.basicConfig(level=logging.INFO)
-#logging.config.fileConfig('logging.conf')
-log = logging.getLogger(__name__)
-application = app.app
-#app.add_api('smartlocker_api.yaml', resolver=RestyResolver('api'))
-app.add_api('smartlocker_api.yaml')
+def init_db(application, reset_db):
+    db.init_app(application)
+    if reset_db:
+        reset_database(application)
+
 
 def configure_app(flask_app):
     flask_app.config['SERVER_PORT'] = settings.FLASK_SERVER_PORT
@@ -26,23 +23,16 @@ def configure_app(flask_app):
     flask_app.config['RESTPLUS_VALIDATE'] = settings.RESTPLUS_VALIDATE
     flask_app.config['RESTPLUS_MASK_SWAGGER'] = settings.RESTPLUS_MASK_SWAGGER
     flask_app.config['ERROR_404_HELP'] = settings.RESTPLUS_ERROR_404_HELP
+    flask_app.config['DEBUG'] = settings.FLASK_DEBUG
 
-def initialize_app(flask_app):
-    configure_app(flask_app)
+logging.basicConfig(level=logging.INFO)
+app = connexion.App(__name__)
+flask_app = app.app
 
-#    blueprint = Blueprint('api', __name__, url_prefix='/api')
-#    api.init_app(blueprint)
-#    api.add_namespace(lockersets_namespace)
-#    flask_app.register_blueprint(blueprint)
-    db.init_app(flask_app)
-    if settings.RESET_DATABASE:
-        reset_database(flask_app)
+app.add_api('swagger.yaml')
+configure_app(flask_app)
+init_db(flask_app, settings.RESET_DATABASE)
 
-
-def main():
-    initialize_app(application)
-    log.info('>>>>> Starting development server at http://{}/ <<<<<'.format(application.config['SERVER_NAME']))
-    app.run(debug=settings.FLASK_DEBUG, port=settings.FLASK_SERVER_PORT)
-
-if __name__ == "__main__":
-    main()
+if __name__ == '__main__':
+    # run our standalone gevent server
+    app.run(port=settings.FLASK_SERVER_PORT)

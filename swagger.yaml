@@ -1,0 +1,217 @@
+swagger: '2.0'
+info:
+  title: Pet Shop Example API
+  version: "0.1"
+consumes:
+  - application/json
+produces:
+  - application/json
+paths:
+  /sessions:
+    post:
+      operationId: api.sessions.create
+      tags:
+        - Session
+      summary: >-
+        Creates a new session. If other session exists for the same user, delete
+        it
+      parameters:
+        - name: email
+          description: user e-mail
+          in: header
+          type: string
+          required: true
+        - name: password
+          description: user password
+          in: header
+          type: string
+          format: password
+          required: true
+      responses:
+        '200':
+          description: Session created
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Session'
+        '400':
+          description: Invalid user or password
+
+  /lockersets:
+    get:
+      operationId: api.lockersets.list
+      tags:
+        - Lockersets
+      summary: Fetch lockersets
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: code
+          description: the lockerset code
+          in: query
+          type: string
+          pattern: '^[a-zA-Z0-9]*$'
+          required: false
+      responses:
+        '200':
+          description: List of lockersets
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Lockerset'
+        '401':
+          description: Invalid token
+    post:
+      operationId: api.lockersets.create
+      tags:
+        - Lockersets
+      summary: Create lockerset
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: code
+          description: the lockerset code
+          in: header
+          type: string
+          pattern: '^[a-zA-Z0-9]*$'
+          required: true
+        - name: numBoxes
+          description: number of boxes for this lockeset
+          in: header
+          type: integer
+          required: true
+      responses:
+        '200':
+          description: Lockerset created
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Lockerset'
+        '400':
+          description: numBoxes value out of range
+        '400':
+          description: invalid code
+        '401':
+          description: Invalid token
+        '409':
+          description: Lockerset already exists
+
+  /lockersets/{lockerset_code}:
+    delete:
+      operationId: api.lockersets.delete
+      tags:
+        - Lockersets
+      summary: Remove a Lockerset
+      parameters:
+        - $ref: '#/parameters/lockerset_code'
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+      responses:
+        '204':
+          description: Lockerset was deleted
+        '401':
+          description: Invalid token
+    get:
+      operationId: api.lockersets.get
+      tags:
+        - Lockersets
+      summary: Get a specific Lockerset
+      parameters:
+        - $ref: '#/parameters/lockerset_code'
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+      responses:
+        '200':
+          description: Lockerset Returned
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Lockerset'
+        '400':
+          description: Lockerset code not found
+        '401':
+          description: Invalid token
+      
+parameters:
+  lockerset_code:
+    name: lockerset_code
+    description: Lockerset's Unique identifier
+    in: path
+    type: string
+    required: true
+    pattern: '^[a-zA-Z0-9-]+$'
+  email:
+    name: email
+    description: user's email address
+    in: path
+    type: string
+    required: true
+definitions:
+  Lockerset:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      code:
+        type: string
+      numBoxes:
+        type: integer
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        format: int64
+      email:
+        type: string
+  Session:
+    type: object
+    properties:
+      token:
+        type: string
+      email:
+        type: string
+      expiration:
+        type: string
+        format: date-time
+  LockerBox:
+    type: object
+    properties:
+      lockersetId:
+        type: integer
+        format: int64
+      lockersetCode:
+        type: string
+      lockerBoxNumber:
+        type: integer
+  LockerBoxPutResponse:
+    type: object
+    properties:
+      lockersetId:
+        type: integer
+        format: int64
+      lockersetCode:
+        type: string
+      lockerBoxNumber:
+        type: integer
+        format: int16
+      secondKey:
+        type: string
+  LockerBoxKey:
+    type: object
+    properties:
+      key:
+        type: string
+      url:
+        type: string
