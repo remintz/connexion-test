@@ -46,3 +46,24 @@ class Session(db.Model, Serializer):
     def serialize(self):
         d = Serializer.serialize(self)
         return d
+
+class Lockerbox(db.Model, Serializer):
+    id = db.Column(db.Integer, primary_key=True)
+    lockerbox_code = db.Column(db.String(60))
+    lockerset_code = db.Column(db.String(50))
+    status = db.Column(db.Integer)
+    key = db.Column(db.String(50))
+    STATUS_EMPTY, STATUS_FULL = range(2)
+
+    def __init__(self, lockerset_code, box_number):
+        self.lockerbox_code = "%s/%d" % (lockerset_code, box_number)
+        self.lockerset_code = lockerset_code
+        self.status = Lockerbox.STATUS_EMPTY
+        self.key = ''
+    
+    def __repr__(self):
+        return '<Lockerbox %s>' % self.lockerbox_code
+
+    def serialize(self):
+        d = Serializer.serialize(self)
+        return d

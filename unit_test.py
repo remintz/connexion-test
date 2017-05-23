@@ -16,7 +16,8 @@ LOCKER3_CODE = 'LOCKER3'
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
-class SmartLockerAPIUnitTest(unittest.TestCase):
+'''
+class SmartLockerAPILockersetTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(self):
@@ -106,6 +107,45 @@ class SmartLockerAPIUnitTest(unittest.TestCase):
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['code'], LOCKER2_CODE)
         self.assertEqual(data[0]['numBoxes'], LOCKER2_NUM_BOXES)
+'''
+
+class SmartLockerAPILockerboxTest(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(self):
+        log.debug('setUpClass')
+        self.db_fd, self.db_file_name = tempfile.mkstemp()
+        application.flask_app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + self.db_file_name
+        application.flask_app.config['TESTING'] = True
+        self.app = application.flask_app.test_client()
+        application.init_db(application.flask_app, True)
+
+    @classmethod
+    def tearDownClass(self):
+        log.debug('tearDownClass')
+        os.close(self.db_fd)
+        os.unlink(self.db_file_name)
+
+    def test_0200_create_lockerset_ok(self):
+        response = self.app.post('/lockersets', \
+            headers = { 'token': TOKEN, 'code': LOCKER1_CODE, 'numBoxes': LOCKER1_NUM_BOXES }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(data['code'], LOCKER1_CODE)
+        self.assertEqual(data['numBoxes'], LOCKER1_NUM_BOXES)
+
+    def test_0300_list_lockerboxes(self):
+        response = self.app.get('/lockerbox/?lockersetCode=' + LOCKER1_CODE, \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+   
+        print ("data: %s" % data)
+
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES)
+        for box in range(1, LOCKER1_NUM_BOXES):
+            box_code = "%s/%d" % (LOCKER1_CODE, box)
+            self.assertEqual(data[box-1]["lockerbox_code"], box_code)
 
 if __name__ == '__main__':
     unittest.main()

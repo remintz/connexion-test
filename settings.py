@@ -16,4 +16,4 @@ SQLALCHEMY_DATABASE_URI_UNITTEST = 'sqlite:///dbtest.sqlite'
 
 # Set to true if you want to reset the database on next run
 # REMEMBER TO SET BACK TO FALSE AGAIN!!!
-RESET_DATABASE = False
+RESET_DATABASE = True

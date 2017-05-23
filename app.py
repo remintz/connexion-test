@@ -13,7 +13,6 @@ def init_db(application, reset_db):
     if reset_db:
         reset_database(application)
 
-
 def configure_app(flask_app):
     flask_app.config['SERVER_PORT'] = settings.FLASK_SERVER_PORT
     flask_app.config['SERVER_NAME'] = settings.FLASK_SERVER_NAME

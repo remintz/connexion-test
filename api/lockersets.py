@@ -3,7 +3,7 @@ import logging
 from connexion import NoContent
 import connexion
 from database import db
-from database.models import Lockerset
+from database.models import Lockerset, Lockerbox
 import uuid
 
 log = logging.getLogger(__name__)
@@ -23,6 +23,9 @@ def create():
         return NoContent, 400
     lockerset = Lockerset(code, numBoxes)
     db.session.add(lockerset)
+    #--- add lockerboxes for this lockerset
+    for box in range(1, numBoxes):
+        lockerbox = Lockerbox(code, box)
     db.session.commit()
     log.debug('lockerset created')
     return lockerset.serialize(), 201

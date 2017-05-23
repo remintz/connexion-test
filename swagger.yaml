@@ -141,7 +141,92 @@ paths:
           description: Lockerset code not found
         '401':
           description: Invalid token
-      
+
+  /lockerbox:
+    get:
+      operationId: api.lockerbox.list
+      tags:
+        - Lockersets
+      summary: Returns a list of locker boxes according to the query performed
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: lockersetCode
+          description: the code for the lockerset being searched
+          in: query
+          type: string
+          required: true
+        - name: onlyAvailable
+          description: if looking just for available boxes
+          in: query
+          type: boolean
+          allowEmptyValue: true
+          required: false
+        - name: onlyOne
+          description: >-
+            if looking for just one value, for example, when selecting an
+            available box for a user
+          in: query
+          type: boolean
+          allowEmptyValue: true
+          required: false
+      responses:
+        '200':
+          description: List of boxes
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/LockerBox'
+        '401':
+          description: Invalid token
+    put:
+      operationId: api.lockerbox.put
+      tags:
+        - Lockersets
+      summary: Changes the box status
+      description: >-
+        used to change the box status such as when opening the box, storing or
+        retrieving an object
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: lockersetCode
+          description: the code for the lockerset being searched
+          in: query
+          type: string
+          required: true
+        - name: lockerBoxNumber
+          in: query
+          description: the number of the box
+          type: integer
+          required: true
+        - name: operation
+          description: the command to be applied to the box
+          in: query
+          type: string
+          enum:
+            - Open
+            - Store
+          required: true
+        - name: key
+          description: the key required when command=Open
+          in: query
+          type: string
+          required: false
+      responses:
+        '200':
+          description: when operation=Store returns the second key
+          schema:
+            $ref: '#/definitions/LockerBoxPutResponse'
+        '401':
+          description: Invalid token
+
 parameters:
   lockerset_code:
     name: lockerset_code
