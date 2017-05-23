@@ -9,11 +9,16 @@ from smartlocker_api.api.restplus import api
 from smartlocker_api.database import db, reset_database
 
 
-app = connexion.FlaskApp(__name__, 9090, specification_dir='swagger/')
-logging.config.fileConfig('logging.conf')
+app = connexion.App(__name__, specification_dir='swagger/')
+logging.basicConfig(level=logging.INFO)
+#logging.config.fileConfig('logging.conf')
 log = logging.getLogger(__name__)
+application = app.app
+#app.add_api('smartlocker_api.yaml', resolver=RestyResolver('api'))
+app.add_api('smartlocker_api.yaml')
 
 def configure_app(flask_app):
+    flask_app.config['SERVER_PORT'] = settings.FLASK_SERVER_PORT
     flask_app.config['SERVER_NAME'] = settings.FLASK_SERVER_NAME
     flask_app.config['SQLALCHEMY_DATABASE_URI'] = settings.SQLALCHEMY_DATABASE_URI
     flask_app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = settings.SQLALCHEMY_TRACK_MODIFICATIONS
@@ -21,8 +26,6 @@ def configure_app(flask_app):
     flask_app.config['RESTPLUS_VALIDATE'] = settings.RESTPLUS_VALIDATE
     flask_app.config['RESTPLUS_MASK_SWAGGER'] = settings.RESTPLUS_MASK_SWAGGER
     flask_app.config['ERROR_404_HELP'] = settings.RESTPLUS_ERROR_404_HELP
-
-
 
 def initialize_app(flask_app):
     configure_app(flask_app)
@@ -37,11 +40,9 @@ def initialize_app(flask_app):
 
 
 def main():
-    flask_app = app.app
-    initialize_app(flask_app)
-    log.info('>>>>> Starting development server at http://{}/ <<<<<'.format(flask_app.config['SERVER_NAME']))
-    app.add_api('smartlocker_api.yaml', resolver=RestyResolver('api'))
-    app.run(debug=settings.FLASK_DEBUG)
+    initialize_app(application)
+    log.info('>>>>> Starting development server at http://{}/ <<<<<'.format(application.config['SERVER_NAME']))
+    app.run(debug=settings.FLASK_DEBUG, port=settings.FLASK_SERVER_PORT)
 
 if __name__ == "__main__":
     main()
