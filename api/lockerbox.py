@@ -8,10 +8,20 @@ import uuid
 
 log = logging.getLogger(__name__)
 
-def list(lockersetCode, onlyAvailable=False, onlyOne=False):
+def list(lockersetCode=None, onlyAvailable=False, onlyOne=False):
+    log.debug('list: lockersetCode: %s, onlyAvailable: %s, onlyOne: %s' % (lockersetCode, onlyAvailable, onlyOne))
     token = connexion.request.headers['token']
     #--- TODO: check token
-    lockerboxes = Lockerbox.query.all()
+    lockerboxes = []
+    if lockersetCode is None or len(lockersetCode) == 0:
+        lockerboxes = Lockerbox.query.all()
+    else:
+        if onlyAvailable:
+            lockerboxes = Lockerbox.query. \
+                filter(Lockerbox.lockerset_code == lockersetCode). \
+                filter(Lockerbox.status == Lockerbox.STATUS_EMPTY)
+        if onlyOne:
+            lockerboxes = lockerboxes.first()
     return Lockerbox.serialize_list(lockerboxes)
 
 def put():

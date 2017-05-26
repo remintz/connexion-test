@@ -24,8 +24,10 @@ def create():
     lockerset = Lockerset(code, numBoxes)
     db.session.add(lockerset)
     #--- add lockerboxes for this lockerset
-    for box in range(1, numBoxes):
+    log.debug('creating %d boxes' % numBoxes)
+    for box in range(1, numBoxes+1):
         lockerbox = Lockerbox(code, box)
+        db.session.add(lockerbox)
     db.session.commit()
     log.debug('lockerset created')
     return lockerset.serialize(), 201

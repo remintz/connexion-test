@@ -1,6 +1,6 @@
 swagger: '2.0'
 info:
-  title: Pet Shop Example API
+  title: Smartlocker API
   version: "0.1"
 consumes:
   - application/json
@@ -158,7 +158,7 @@ paths:
           description: the code for the lockerset being searched
           in: query
           type: string
-          required: true
+          required: false
         - name: onlyAvailable
           description: if looking just for available boxes
           in: query
@@ -196,37 +196,139 @@ paths:
           in: header
           type: string
           required: true
-        - name: lockersetCode
-          description: the code for the lockerset being searched
+        - name: lockerBoxCode
           in: query
+          description: the code of the box
           type: string
-          required: true
-        - name: lockerBoxNumber
-          in: query
-          description: the number of the box
-          type: integer
           required: true
         - name: operation
           description: the command to be applied to the box
           in: query
           type: string
           enum:
+            - Assign
+            - Unassign
+            - Block
+            - Unblock
             - Open
-            - Store
           required: true
+        - name: user
+          description: the user id, required when operation=Assign
+          in: query
+          type: string
+          required: false
         - name: key
-          description: the key required when command=Open
+          description: the key, required when command=Open
           in: query
           type: string
           required: false
       responses:
         '200':
-          description: when operation=Store returns the second key
+          description: when operation=Assign returns the second key
           schema:
             $ref: '#/definitions/LockerBoxPutResponse'
         '401':
           description: Invalid token
-
+  /users:
+    get:
+      operationId: api.users.list
+      tags:
+        - Users
+      summary: Fetch users
+      responses:
+        '200':
+          description: Fetch a list of users
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: email
+          description: user e-mail
+          in: query
+          type: string
+    post:
+      operationId: api.users.create
+      tags:
+        - Users
+      summary: Crate user
+      description: Creates a user. The e-mail will be used as a login
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - name: email
+          description: user e-mail
+          in: header
+          type: string
+          required: true
+          pattern: '(?:[a-z0-9!#$%&''*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])'
+        - name: password
+          description: user password
+          in: header
+          type: string
+          format: password
+          required: true
+      responses:
+        '200':
+          description: User created
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/User'
+        '400':
+          description: Invalid email
+        '401':
+          description: Invalid token
+        '409':
+          description: User already exists
+  '/users/{email}':
+    delete:
+      operationId: api.users.delete
+      tags:
+        - Users
+      summary: Remove a User
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - $ref: '#/parameters/email'
+      responses:
+        '204':
+          description: User was deleted
+        '401':
+          description: Invalid token
+    get:
+      operationId: api.users.get
+      tags:
+        - Users
+      summary: Get a specific user
+      parameters:
+        - name: token
+          description: authentication token
+          in: header
+          type: string
+          required: true
+        - $ref: '#/parameters/email'
+      responses:
+        '200':
+          description: Return the user
+          schema:
+            $ref: '#/definitions/User'
+        '401':
+          description: Invalid token
+        '404':
+          description: User does not exist
+      
 parameters:
   lockerset_code:
     name: lockerset_code

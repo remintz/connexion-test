@@ -4,6 +4,9 @@
 
 from database import db
 from sqlalchemy.inspection import inspect
+import logging
+
+log = logging.getLogger(__name__)
 
 class Serializer(object):
     def serialize(self):
@@ -56,6 +59,7 @@ class Lockerbox(db.Model, Serializer):
     STATUS_EMPTY, STATUS_FULL = range(2)
 
     def __init__(self, lockerset_code, box_number):
+        log.debug('Lockerbox: lockerset_code: %s, box_number: %d' % (lockerset_code, box_number))
         self.lockerbox_code = "%s/%d" % (lockerset_code, box_number)
         self.lockerset_code = lockerset_code
         self.status = Lockerbox.STATUS_EMPTY
@@ -67,3 +71,19 @@ class Lockerbox(db.Model, Serializer):
     def serialize(self):
         d = Serializer.serialize(self)
         return d
+
+class User(db.Model, Serializer):
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(50))
+
+    def __init__(self, email):
+        log.debug('User: email: %s' % email)
+        self.email = email
+
+    def __repr__(self):
+        return '<User %s>' % self.email
+
+    def serialize(self):
+        d = Serializer.serialize(self)
+        return d
+
