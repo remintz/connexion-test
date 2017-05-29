@@ -212,6 +212,7 @@ paths:
             - Unassign
             - Block
             - Unblock
+            - BlockForced
             - Open
           required: true
         - name: user
@@ -229,8 +230,12 @@ paths:
           description: when operation=Assign returns the second key
           schema:
             $ref: '#/definitions/LockerBoxPutResponse'
+        '403':
+          description: wrong key when opening box
         '401':
           description: Invalid token
+        '400':
+          description: Missing key (when operation = Open)
   /users:
     get:
       operationId: api.users.list

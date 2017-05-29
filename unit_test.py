@@ -20,6 +20,8 @@ USER2_PASSWORD = 'password2'
 
 ASSIGN_KEY_1 = '123'
 
+locker_key = ''
+
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
 
@@ -305,6 +307,7 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
             self.assertEqual(data[box-1]["lockerbox_code"], box_code)
 
     def test_0400_assign_box_to_user(self):
+        global locker_key
         response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Assign" % (LOCKER1_CODE, 2, USER1_EMAIL), \
             headers = { 'token': TOKEN }        \
         )
@@ -314,7 +317,10 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
         self.assertEqual(data['user'], USER1_EMAIL)
         self.assertIsNotNone(data.get('key'))
         self.assertNotEqual(len(data['key']), 0)
+        self.assertEqual(data['key'], ASSIGN_KEY_1)
         self.assertEqual(data['status'], 1)
+        locker_key = data['key']
+        print('locker_key: %s' % locker_key)
 
     def test_0500_list_available_boxes_after_assignment(self):
         # box #2 should be missing
@@ -334,47 +340,133 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
             box_number = box_number + 1
             data_index = data_index + 1
 
-'''
-    def test_xxx_open_box_wrong_key(self):
-        assert False
-        pass
+    def test_0600_open_box_wrong_key(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Open&key=%s" % (LOCKER1_CODE, 2, USER1_EMAIL, 'wrongkey'), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 403, ('data: %s' % data))
 
-    def test_xxxx_open_box(self):
-        assert False
-        pass
+    def test_0700_open_box_missing_key(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Open" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 400, ('data: %s' % data))
 
-    def test_0700_unassign_box(self):
-        assert False
-        pass
+    def test_0800_open_box(self):
+        global locker_key
+        print('Locker key: %s' % locker_key)
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Open&key=%s" % (LOCKER1_CODE, 2, USER1_EMAIL, locker_key), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
 
-    def test_xxxx_list_available_boxes(self):
-        assert False
-        pass
+    def test_0900_unassign_box(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Unassign" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
 
-    def test_xxx_open_unassigned_box(self):
-        assert False
-        pass
+    def test_1000_list_lockerboxes_after_unassign(self):
+        response = self.app.get(('/lockerbox?lockersetcode=%s' % LOCKER1_CODE), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES)
+        for box in range(1, LOCKER1_NUM_BOXES+1):
+            box_code = "%s/%d" % (LOCKER1_CODE, box)
+            self.assertEqual(data[box-1]["lockerbox_code"], box_code)
 
-    def test_xxxx_block_box(self):
-        assert False
-        pass
+    def test_1100_open_unassigned_box(self):
+        global locker_key
+        print('Locker key: %s' % locker_key)
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Open&key=%s" % (LOCKER1_CODE, 2, USER1_EMAIL, locker_key), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 409, ('data: %s' % data))
+        
+    def test_1200_assign_box_to_user_for_block_tests(self):
+        global locker_key
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Assign" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
+        self.assertEqual(data['lockerbox_code'], ('%s/%d' % (LOCKER1_CODE, 2)))
+        self.assertEqual(data['user'], USER1_EMAIL)
+        self.assertIsNotNone(data.get('key'))
+        self.assertNotEqual(len(data['key']), 0)
+        self.assertEqual(data['key'], ASSIGN_KEY_1)
+        self.assertEqual(data['status'], 1)
+        locker_key = data['key']
+        print('locker_key: %s' % locker_key)
 
-    def test_yyyy_list_available_boxes(self):
-        assert False
-        pass
+    def test_1300_unblock_assigned_box(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Unblock" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 409, ('data: %s' % data))
 
-    def test_xxx_open_blocked_box(self):
-        assert False
-        pass
+    def test_1400_block_assigned_box(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Block" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 409, ('data: %s' % data))
 
-    def test_xxxx_unblock_box(self):
-        assert False
-        pass
+    def test_1500_force_block_assigned_box(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=BlockForced" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
 
-    def test_zzzz_list_available_boxes(self):
-        assert False
-        pass
-'''
+    def test_1600_list_available_boxes_after_block(self):
+        # box #2 should be missing
+        response = self.app.get(('/lockerbox?lockersetcode=%s&onlyavailable=True' % LOCKER1_CODE), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES-1, ('data: %s' % data))
+        data_index = 0
+        box_number = 1
+        while box_number <= LOCKER1_NUM_BOXES:
+            if box_number == 2:
+                box_number = box_number + 1
+            box_code = "%s/%d" % (LOCKER1_CODE, box_number)
+            self.assertEqual(data[data_index]["lockerbox_code"], box_code, ('data: %s' % data))
+            box_number = box_number + 1
+            data_index = data_index + 1
+
+    def test_1700_unblock_box(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Unblock" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
+
+    def test_1800_list_lockerboxes_after_unblock(self):
+        response = self.app.get(('/lockerbox?lockersetcode=%s' % LOCKER1_CODE), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES)
+        for box in range(1, LOCKER1_NUM_BOXES+1):
+            box_code = "%s/%d" % (LOCKER1_CODE, box)
+            self.assertEqual(data[box-1]["lockerbox_code"], box_code)
+        
+    def test_1900_invalid_operation(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=XXXX" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 400, ('data: %s' % data))
 
 def suite():
     suite = unittest.TestSuite()
