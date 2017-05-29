@@ -56,7 +56,8 @@ class Lockerbox(db.Model, Serializer):
     lockerset_code = db.Column(db.String(50))
     status = db.Column(db.Integer)
     key = db.Column(db.String(50))
-    STATUS_EMPTY, STATUS_FULL = range(2)
+    user = db.Column(db.String(50))
+    STATUS_EMPTY, STATUS_ASSIGNED, STATUS_BLOCKED = range(3)
 
     def __init__(self, lockerset_code, box_number):
         log.debug('Lockerbox: lockerset_code: %s, box_number: %d' % (lockerset_code, box_number))

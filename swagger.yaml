@@ -154,18 +154,18 @@ paths:
           in: header
           type: string
           required: true
-        - name: lockersetCode
+        - name: lockersetcode
           description: the code for the lockerset being searched
           in: query
           type: string
-          required: false
-        - name: onlyAvailable
+          required: true
+        - name: onlyavailable
           description: if looking just for available boxes
           in: query
           type: boolean
           allowEmptyValue: true
           required: false
-        - name: onlyOne
+        - name: onlyone
           description: >-
             if looking for just one value, for example, when selecting an
             available box for a user
@@ -180,6 +180,8 @@ paths:
             type: array
             items:
               $ref: '#/definitions/LockerBox'
+        '400':
+          description: Lockerbox code not found
         '401':
           description: Invalid token
     put:
@@ -196,7 +198,7 @@ paths:
           in: header
           type: string
           required: true
-        - name: lockerBoxCode
+        - name: lockerboxcode
           in: query
           description: the code of the box
           type: string

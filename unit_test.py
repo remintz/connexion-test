@@ -18,6 +18,7 @@ USER1_PASSWORD = 'password1'
 USER2_EMAIL = 'user2@email.com'
 USER2_PASSWORD = 'password2'
 
+ASSIGN_KEY_1 = '123'
 
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger(__name__)
@@ -234,7 +235,7 @@ class SmartLockerAPILockerboxTest(unittest.TestCase):
         self.assertEqual(data['numBoxes'], LOCKER1_NUM_BOXES)
 
     def test_0300_list_lockerboxes(self):
-        response = self.app.get('/lockerbox', \
+        response = self.app.get(('/lockerbox?lockersetcode=%s' % LOCKER1_CODE), \
             headers = { 'token': TOKEN }        \
         )
         data = json.loads(response.get_data(as_text=True))
@@ -242,19 +243,10 @@ class SmartLockerAPILockerboxTest(unittest.TestCase):
         for box in range(1, LOCKER1_NUM_BOXES):
             box_code = "%s/%d" % (LOCKER1_CODE, box)
             self.assertEqual(data[box-1]["lockerbox_code"], box_code)
-
-    def test_0400_list_lockerboxes_for_lockerset(self):
-        response = self.app.get(('/lockerbox?lockerset=%s' % LOCKER1_CODE), \
-            headers = { 'token': TOKEN }        \
-        )
-        data = json.loads(response.get_data(as_text=True))
-        self.assertEqual(len(data), LOCKER1_NUM_BOXES)
-        for box in range(1, LOCKER1_NUM_BOXES):
-            box_code = "%s/%d" % (LOCKER1_CODE, box)
-            self.assertEqual(data[box-1]["lockerbox_code"], box_code)
+            self.assertEqual(data[box-1]["status"], 0)
 
     def test_0500_list_lockerboxes_wrong_lockerset(self):
-        response = self.app.get(('/lockerbox?lockersetCode=%s' % LOCKER2_CODE), \
+        response = self.app.get(('/lockerbox?lockersetcode=%s' % LOCKER2_CODE), \
             headers = { 'token': TOKEN }        \
         )
         data = json.loads(response.get_data(as_text=True))
@@ -279,21 +271,70 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
         os.unlink(self.db_file_name)
 
     #--- create user
+    #--- create lockerset
     #--- user login
     #--- user allocates a box
     #--- user closes box
     #--- user opens box with key
     #--- box is released
 
-    '''
-    def test_0600_assign_box_to_user(self):
-        assert False
-        pass
+    def test_0100_create_user(self):
+        response = self.app.post('/users', \
+            headers = { 'token': TOKEN, 'email': USER1_EMAIL, 'password': USER1_PASSWORD }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(data['email'], USER1_EMAIL)
+        self.assertIsNone(data.get('password'))
 
-    def test_xxx_list_available_boxes(self):
-        assert False
-        pass
+    def test_0200_create_lockerset_ok(self):
+        response = self.app.post('/lockersets', \
+            headers = { 'token': TOKEN, 'code': LOCKER1_CODE, 'numBoxes': LOCKER1_NUM_BOXES }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(data['code'], LOCKER1_CODE)
+        self.assertEqual(data['numBoxes'], LOCKER1_NUM_BOXES)
 
+    def test_0300_list_lockerboxes(self):
+        response = self.app.get(('/lockerbox?lockersetcode=%s' % LOCKER1_CODE), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES)
+        for box in range(1, LOCKER1_NUM_BOXES+1):
+            box_code = "%s/%d" % (LOCKER1_CODE, box)
+            self.assertEqual(data[box-1]["lockerbox_code"], box_code)
+
+    def test_0400_assign_box_to_user(self):
+        response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Assign" % (LOCKER1_CODE, 2, USER1_EMAIL), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
+        self.assertEqual(data['lockerbox_code'], ('%s/%d' % (LOCKER1_CODE, 2)))
+        self.assertEqual(data['user'], USER1_EMAIL)
+        self.assertIsNotNone(data.get('key'))
+        self.assertNotEqual(len(data['key']), 0)
+        self.assertEqual(data['status'], 1)
+
+    def test_0500_list_available_boxes_after_assignment(self):
+        # box #2 should be missing
+        response = self.app.get(('/lockerbox?lockersetcode=%s&onlyavailable=True' % LOCKER1_CODE), \
+            headers = { 'token': TOKEN }        \
+        )
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 200, ('data: %s' % data))
+        self.assertEqual(len(data), LOCKER1_NUM_BOXES-1, ('data: %s' % data))
+        data_index = 0
+        box_number = 1
+        while box_number <= LOCKER1_NUM_BOXES:
+            if box_number == 2:
+                box_number = box_number + 1
+            box_code = "%s/%d" % (LOCKER1_CODE, box_number)
+            self.assertEqual(data[data_index]["lockerbox_code"], box_code, ('data: %s' % data))
+            box_number = box_number + 1
+            data_index = data_index + 1
+
+'''
     def test_xxx_open_box_wrong_key(self):
         assert False
         pass
