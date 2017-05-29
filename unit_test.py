@@ -173,6 +173,8 @@ class SmartLockerApiUserTest(unittest.TestCase):
             headers = { 'token': TOKEN, 'email': USER2_EMAIL, 'password': USER2_PASSWORD }        \
         )
         self.assertEqual(response.status_code, 409)
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(data['code'], 'DUP_USER')
 
     def test_0430_list_two_users_again(self):
         response = self.app.get('/users', headers={'token': TOKEN})
@@ -180,6 +182,12 @@ class SmartLockerApiUserTest(unittest.TestCase):
         self.assertEqual(len(data), 2)
         self.assertEqual(data[0]['email'], USER1_EMAIL)
         self.assertEqual(data[1]['email'], USER2_EMAIL)
+
+    def test_0440_get_one_user(self):
+        response = self.app.get(('/users/%s' % USER2_EMAIL), headers={'token': TOKEN})
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 201, ('data: %s' % data))
+        self.assertEqual(data['email'], USER2_EMAIL, ('data: %s' % data))
 
     def test_0500_delete_user(self):
         response = self.app.delete('/users/' + USER1_EMAIL, \
@@ -195,9 +203,11 @@ class SmartLockerApiUserTest(unittest.TestCase):
 
     def test_0600_list_one_user(self):
         response = self.app.get('/users', headers={'token': TOKEN})
+        self.assertEqual(response.status_code, 200)
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(len(data), 1)
         self.assertEqual(data[0]['email'], USER2_EMAIL)
+
 
     def test_0700_delete_last_user(self):
         response = self.app.delete('/users/' + USER2_EMAIL, \
@@ -209,6 +219,10 @@ class SmartLockerApiUserTest(unittest.TestCase):
         response = self.app.get('/users', headers={'token': TOKEN})
         data = json.loads(response.get_data(as_text=True))
         self.assertEqual(data, [])
+
+    def test_0900_get_one_user_fail(self):
+        response = self.app.get(('/users/%s' % USER2_EMAIL), headers={'token': TOKEN})
+        self.assertEqual(response.status_code, 404)
 
 
 class SmartLockerAPILockerboxTest(unittest.TestCase):
