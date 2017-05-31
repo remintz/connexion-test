@@ -5,6 +5,11 @@ import connexion
 from database import db
 from database.models import Lockerbox, User
 import uuid
+from api.return_status import get_ret_status
+from pyqrcode import pyqrcode
+import io
+from flask import send_file
+import os
 
 log = logging.getLogger(__name__)
 
@@ -110,3 +115,20 @@ def put(lockerboxcode=None, operation=None, user=None, key=None ):
         return lockerbox.serialize(), 200
 
     return { 'msg': 'Invalid operation' }, 400
+
+def getkey(lockerboxcode=None, key=None):
+    log.info('getkey: lockerboxcode: %s, key: %s' % (lockerboxcode, key))
+    lockerbox = Lockerbox.query.filter(Lockerbox.lockerbox_code == lockerboxcode).first()
+    if lockerbox is None:
+        return get_ret_status('LOCKERBOX_NOT_FOUND'), 400
+    if lockerbox.status != Lockerbox.STATUS_ASSIGNED:
+        return get_ret_status('CANT_OPEN_LOCKERBOX'), 409
+    if lockerbox.key != key:
+        return get_ret_status('INVALID_KEY'), 409
+    filename = '%s.png' % uuid.uuid4()
+    code = '%s-%s' % (lockerbox.lockerbox_code, lockerbox.key)
+    log.info('qr code: %s' % code)
+    qr = pyqrcode.create(code)
+    qr.png(filename, scale=10)
+    response = send_file(filename, mimetype='image/png')
+    return response, 200

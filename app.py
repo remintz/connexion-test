@@ -25,7 +25,7 @@ def configure_app(flask_app):
     flask_app.config['DEBUG'] = settings.FLASK_DEBUG
 
 logging.basicConfig(level=logging.INFO)
-app = connexion.App(__name__)
+app = connexion.FlaskApp("smartlocker_api")
 flask_app = app.app
 
 app.add_api('swagger.yaml')

@@ -320,6 +320,12 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
             box_code = "%s/%d" % (LOCKER1_CODE, box)
             self.assertEqual(data[box-1]["lockerbox_code"], box_code)
 
+    def test_0310_get_lockerbox_key_unassigned(self):
+        response = self.app.get('lockerboxkey?lockerboxcode=%s/%d&key=%s' % (LOCKER1_CODE, 2, '123'))
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 409, ('data: %s' % data))
+        self.assertEqual(data['code'], 'CANT_OPEN_LOCKERBOX')
+
     def test_0400_assign_box_to_user(self):
         global locker_key
         response = self.app.put("/lockerbox?lockerboxcode=%s/%d&user=%s&operation=Assign" % (LOCKER1_CODE, 2, USER1_EMAIL), \
@@ -335,6 +341,17 @@ class SmartLockerAPIBlueSkyScenario(unittest.TestCase):
         self.assertEqual(data['status'], 1)
         locker_key = data['key']
         print('locker_key: %s' % locker_key)
+
+    def test_0410_get_lockerbox_key(self):
+        global locker_key
+        response = self.app.get('lockerboxkey?lockerboxcode=%s/%d&key=%s' % (LOCKER1_CODE, 2, locker_key))
+        self.assertEqual(response.status_code, 200)
+
+    def test_0420_get_lockerbox_key_wrong_key(self):
+        response = self.app.get('lockerboxkey?lockerboxcode=%s/%d&key=%s' % (LOCKER1_CODE, 2, 'aaaaa'))
+        data = json.loads(response.get_data(as_text=True))
+        self.assertEqual(response.status_code, 409, ('data: %s' % data))
+        self.assertEqual(data['code'], 'INVALID_KEY')
 
     def test_0500_list_available_boxes_after_assignment(self):
         # box #2 should be missing

@@ -336,6 +336,36 @@ paths:
         '404':
           description: User does not exist
       
+  /lockerboxkey:
+    get:
+      operationId: api.lockerbox.getkey
+      produces:
+      - image/png
+      tags:
+        - Lockersets
+      summary: used to return the QRCode to open a lockerbox
+      parameters:
+        - name: lockerboxcode
+          description: the code for the lockerbox
+          in: query
+          type: string
+          required: true
+        - name: key
+          description: the key code
+          in: query
+          type: string
+          required: true
+      responses:
+        '200':
+          description: the lockerbox key image
+          schema:
+            type: string
+            format: bytes
+        '400':
+          description: Lockerbox code not found
+        '409':
+          description: Lockerbox cannot be opened now
+
 parameters:
   lockerset_code:
     name: lockerset_code
@@ -401,11 +431,4 @@ definitions:
         type: integer
         format: int16
       secondKey:
-        type: string
-  LockerBoxKey:
-    type: object
-    properties:
-      key:
-        type: string
-      url:
         type: string
