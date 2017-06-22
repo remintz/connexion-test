@@ -25,7 +25,7 @@ def configure_app(flask_app):
     flask_app.config['DEBUG'] = settings.FLASK_DEBUG
 
 logging.basicConfig(level=logging.INFO)
-app = connexion.FlaskApp("smartlocker_api", server='tornado')
+app = connexion.FlaskApp("smartlocker_api")
 flask_app = app.app
 application = app.app # expose global WSGI application object
 
@@ -36,4 +36,4 @@ init_db(flask_app, settings.RESET_DATABASE)
 if __name__ == '__main__':
     # run our standalone gevent server
     web_port = int(os.environ.get('PORT', settings.FLASK_SERVER_PORT))
-    app.run(port=web_port)
+    app.run(port=web_port, host='127.0.0.1')
