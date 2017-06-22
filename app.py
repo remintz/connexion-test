@@ -27,6 +27,7 @@ def configure_app(flask_app):
 logging.basicConfig(level=logging.INFO)
 app = connexion.FlaskApp("smartlocker_api")
 flask_app = app.app
+application = app.app # expose global WSGI application object
 
 app.add_api('swagger.yaml')
 configure_app(flask_app)
