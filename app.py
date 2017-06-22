@@ -35,4 +35,5 @@ init_db(flask_app, settings.RESET_DATABASE)
 
 if __name__ == '__main__':
     # run our standalone gevent server
-    app.run(port=settings.FLASK_SERVER_PORT)
+    web_port = int(os.environ.get('PORT', settings.FLASK_SERVER_PORT))
+    app.run(port=web_port)
