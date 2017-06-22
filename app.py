@@ -26,4 +26,4 @@ configure_app(flask_app)
 if __name__ == '__main__':
     # run our standalone gevent server
     web_port = int(os.environ.get('PORT', settings.FLASK_SERVER_PORT))
-    app.run(port=web_port, host='127.0.0.1')
+    app.run(port=web_port, host='0.0.0.0')
