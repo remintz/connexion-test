@@ -25,7 +25,7 @@ def configure_app(flask_app):
     flask_app.config['DEBUG'] = settings.FLASK_DEBUG
 
 logging.basicConfig(level=logging.INFO)
-app = connexion.FlaskApp("smartlocker_api")
+app = connexion.FlaskApp("smartlocker_api", server='tornado')
 flask_app = app.app
 application = app.app # expose global WSGI application object
 
